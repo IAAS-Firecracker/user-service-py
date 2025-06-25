@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from datetime import timedelta
 import os
 from pathlib import Path
+from .config_client import get_config 
+from .eureka_client import * 
 
 import dotenv
 
@@ -28,6 +30,35 @@ DB_PASSWORD = os.getenv('DB_PASSWORD','fireCracker')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+
+
+
+CONFIG_SERVER = {
+    'config': {
+        'uri' : 'http://localhost:8080',
+    }
+}
+
+CONF = get_config("account-service",CONFIG_SERVER['config']['uri'])
+print(CONF)
+eureka_conf = {
+ 'server':  CONF.get("propertySources")[0].get('source').get('eureka.client.service-url.defaultZone','http://localhost:8761/eureka'),
+ 'app_name': '  USER-SERVICE',
+ 'port': int( CONF.get("propertySources")[0].get('source').get('server.port'))
+}
+print(eureka_conf)
+init_eureka(eureka_conf)
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+RABBITMQ = {
+    'host':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.host','localhost'),
+    'port':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.port','5672'),
+    'username':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.username','guest'),
+    'password':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.password','guest')
+}
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
