@@ -6,18 +6,95 @@ from rest_framework import permissions, generics, filters
 from rest_framework.decorators import action
 from accounts.models import User, PasswordResetCode
 
-from accounts.serializers import (
-    UserSerializer, 
-    UserCreateSerializer, 
-    UserProfileSerializer,
-    LoginSerializer,
-    AdminSerializer
-)
+from accounts.serializers import *
+
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils.timezone import now
 from django.core.mail import send_mail
 import random
+
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from django.template.loader import TemplateDoesNotExist, render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import EmailMultiAlternatives
+from rest_framework import filters
+from email.mime.image import MIMEImage
+from threading import Thread
+from django.conf import settings
+
+class TemplateEmail(Thread):    
+    def __init__(
+        self,
+        to,
+        subject,
+        template,
+        context,
+        from_email=None,
+        reply_to=None,
+        app_name='accounts',
+        *args,
+        **email_kwargs,
+    ):
+        super().__init__(*args, **email_kwargs)
+        
+        self.to = to
+        self.subject = subject
+        self.template = template
+        self.context = context
+        self.from_email = from_email or settings.EMAIL_HOST_USER
+        self.reply_to = reply_to
+        self.app_name = app_name
+
+        self.html_content, self.plain_content = self.render_content()
+
+        self.to = self.to if not isinstance(self.to, str) else [self.to]
+
+        if self.reply_to:
+            self.reply_to = (
+                self.reply_to if not isinstance(self.reply_to, str) else [self.reply_to]
+            )
+
+        self.django_email = EmailMultiAlternatives(
+            subject=self.subject,
+            body=self.plain_content,
+            from_email=self.from_email,
+            to=self.to,
+            reply_to=self.reply_to,
+            **email_kwargs,
+        )
+        self.django_email.attach_alternative(self.html_content, "text/html")
+        self.django_email.mixed_subtype = "related"
+
+    def render_content(self):
+        html_content = self.render_html()
+
+        try:
+            plain_content = self.render_plain()
+        except TemplateDoesNotExist:
+            plain_content = strip_tags(html_content)
+
+        return html_content, plain_content
+
+    def render_plain(self):
+        return render_to_string(self.get_plain_template_name(), self.context)
+
+    def render_html(self):
+        template_name = self.get_html_template_name()
+        return render_to_string(template_name, self.context)
+
+    def get_plain_template_name(self):
+        return f"{self.app_name}/email/{self.template}.txt"
+
+    def get_html_template_name(self):
+        return f"{self.app_name}/email/{self.template}.html"
+    
+    def send(self, **send_kwargs):
+        return self.django_email.send(**send_kwargs)
+    
+    def run(self, **run_kwargs):
+        self.send(**run_kwargs)
 
 class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -69,6 +146,12 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserCreateSerializer
         elif self.action == 'update_profile':
             return UserProfileSerializer
+        elif self.action == 'generate_code':
+            return GenerateCodeSerializer
+        elif self.action == 'verify_code':
+            return VerifyCodeSerializer
+        elif self.action == 'reset_password':
+            return ResetPasswordSerializer
         return UserSerializer
     
     def get_permissions(self):
@@ -109,12 +192,19 @@ class UserViewSet(viewsets.ModelViewSet):
         PasswordResetCode.objects.filter(email=email, used=False).delete()
         PasswordResetCode.objects.create(email=email, code=code, expires_at=expires_at)
 
-        send_mail(
-            subject='Réinitialisation de votre mot de passe',
-            message=f'Votre code de réinitialisation est : {code}\nCe code expirera dans 15 minutes.',
-            from_email='noreply@example.com',
-            recipient_list=[email],
+        email_context = {
+            'code': code,
+            'expires_at': expires_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'user': user
+        }
+
+        template_email = TemplateEmail(
+            to=email,
+            subject="Réinitialisation de votre mot de passe",
+            template="reset_code",
+            context=email_context
         )
+        template_email.start()
 
         return Response({"success": True, "message": "Code envoyé avec succès"})
 
@@ -129,8 +219,8 @@ class UserViewSet(viewsets.ModelViewSet):
             email=email, used=False, expires_at__gt=now()
         ).first()
 
-        if not reset_code or reset_code.code != code:
-            return Response({"error": "Code invalide ou expiré"}, status=status.HTTP_400_BAD_REQUEST)
+        if not reset_code.valid_code(code):
+            return Response({"error": "Code invalide ou expiré", "valid": reset_code.valid_code(code)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"success": True, "message": "Le code est valide"})
 
@@ -146,7 +236,7 @@ class UserViewSet(viewsets.ModelViewSet):
             email=email, used=False, expires_at__gt=now()
         ).first()
 
-        if not reset_code or reset_code.code != code:
+        if not reset_code.valid_code(code):
             return Response({"error": "Code invalide ou expiré"}, status=status.HTTP_400_BAD_REQUEST)
 
         user = User.objects.filter(email=email).first()
@@ -164,7 +254,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, url_path="change-password", methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
         old_password = request.data.get('password')
-        new_password = request.data.get('newPassword')
+        new_password = request.data.get('new_password')
 
         if not old_password or not new_password:
             return Response({"error": "Tous les champs sont requis"}, status=status.HTTP_400_BAD_REQUEST)

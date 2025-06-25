@@ -1,4 +1,4 @@
-from accounts.models import User
+from accounts.models import User, PasswordResetCode
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import authenticate
@@ -100,3 +100,24 @@ class AdminSerializer(UserSerializer):
     def create(self, validated_data, *args, **kwargs):
         user = self.Meta.model.objects.create_superuser(**validated_data)
         return user
+
+# GenerateCodeSerializer
+# VerifyCodeSerializer
+# ResetPasswordSerializer
+
+class GenerateCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email']
+
+class VerifyCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PasswordResetCode
+        fields = ['email', 'code']
+
+class ResetPasswordSerializer(serializers.ModelSerializer):
+    new_password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
+    
+    class Meta:
+        model = PasswordResetCode
+        fields = ['email', 'code', 'new_password']

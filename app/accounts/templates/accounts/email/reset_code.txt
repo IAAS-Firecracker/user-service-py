@@ -1,0 +1,14 @@
+Réinitialisation de votre mot de passe
+
+Bonjour {{ user.username }},
+
+Vous avez demandé à réinitialiser votre mot de passe. Voici votre code de réinitialisation :
+
+{{ code }}
+
+Ce code expirera le {{ expires_at }}.
+
+Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.
+
+Merci,
+L'équipe IAAS-Firecracker
