@@ -10,7 +10,6 @@ from accounts.serializers import (
     UserSerializer, 
     UserCreateSerializer, 
     UserProfileSerializer,
-    VerificationRequestSerializer,
     LoginSerializer,
     AdminSerializer
 )
@@ -70,8 +69,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserCreateSerializer
         elif self.action == 'update_profile':
             return UserProfileSerializer
-        elif self.action == 'request_verification':
-            return VerificationRequestSerializer
         return UserSerializer
     
     def get_permissions(self):
@@ -95,21 +92,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-    
-    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def request_verification(self, request):
-        if request.user.user_type != 'AGENT':
-            return Response(
-                {"detail": "Only agents can request verification"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        serializer = VerificationRequestSerializer(request.user, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        
-        return Response({"detail": "Verification request submitted successfully"})
-    
+       
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
     def approve_verification(self, request, pk=None):
         user = self.get_object()
