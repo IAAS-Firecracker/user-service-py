@@ -24,9 +24,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # API Endpoints
-    path('api/v1/accounts/', include('accounts.urls')),    
+    path('api/auth/', include('accounts.urls')),
     # JWT Token Refresh
-    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     
     # DRF Auth (for browsable API)
     path('api-auth/', include('rest_framework.urls')),

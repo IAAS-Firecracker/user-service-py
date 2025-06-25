@@ -21,7 +21,7 @@ import dotenv
 dotenv.load_dotenv()
 
 DB_PORT= os.getenv('DB_PORT',5433)
-DB_HOST = os.getenv('DB_HOST','db')
+DB_HOST = os.getenv('DB_HOST','localhost')
 REDIS_HOST = os.getenv('REDIS_HOST','redis')
 REDIS_PORT = os.getenv('REDIS_PORT',6379)
 DB_NAME = os.getenv('DB_NAME','user_service_db')
@@ -40,7 +40,7 @@ CONFIG_SERVER = {
     }
 }
 
-CONF = get_config("account-service",CONFIG_SERVER['config']['uri'])
+CONF = get_config("user-service",CONFIG_SERVER['config']['uri'])
 print(CONF)
 eureka_conf = {
  'server':  CONF.get("propertySources")[0].get('source').get('eureka.client.service-url.defaultZone','http://localhost:8761/eureka'),

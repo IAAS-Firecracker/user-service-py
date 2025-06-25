@@ -101,7 +101,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response({"detail": "User verified successfully"})
     
-    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
+    @action(detail=False, url_path="send-reset-code", methods=['post'], permission_classes=[permissions.AllowAny])
     def generate_code(self, request):
         email = request.data.get('email')
         if not email:
@@ -126,7 +126,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response({"success": True, "message": "Code envoyé avec succès"})
 
-    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
+    @action(detail=False, url_path="verify-code", methods=['post'], permission_classes=[permissions.AllowAny])
     def verify_code(self, request):
         email = request.data.get('email')
         code = request.data.get('code')
@@ -142,7 +142,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response({"success": True, "message": "Le code est valide"})
 
-    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny])
+    @action(detail=False, url_path="reset-password", methods=['post'], permission_classes=[permissions.AllowAny])
     def reset_password(self, request):
         email = request.data.get('email')
         code = request.data.get('code')
@@ -169,7 +169,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response({"success": True, "message": "Mot de passe réinitialisé avec succès"})
     
-    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, url_path="change-password", methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
         old_password = request.data.get('password')
         new_password = request.data.get('newPassword')
