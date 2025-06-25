@@ -44,7 +44,7 @@ CONF = get_config("user-service",CONFIG_SERVER['config']['uri'])
 print(CONF)
 eureka_conf = {
  'server':  CONF.get("propertySources")[0].get('source').get('eureka.client.service-url.defaultZone','http://localhost:8761/eureka'),
- 'app_name': '  USER-SERVICE',
+ 'app_name': 'USER-SERVICE',
  'port': int( CONF.get("propertySources")[0].get('source').get('server.port'))
 }
 print(eureka_conf)

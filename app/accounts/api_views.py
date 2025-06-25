@@ -92,15 +92,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-       
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
-    def approve_verification(self, request, pk=None):
-        user = self.get_object()
-        user.is_verified = True
-        user.verified_date = timezone.now()
-        user.save()
-        return Response({"detail": "User verified successfully"})
-    
+           
     @action(detail=False, url_path="send-reset-code", methods=['post'], permission_classes=[permissions.AllowAny])
     def generate_code(self, request):
         email = request.data.get('email')

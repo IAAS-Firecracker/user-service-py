@@ -1,27 +1,59 @@
 from accounts.models import User
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
+from rest_framework_simplejwt.settings import api_settings
 
-class LoginSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-
-        # Add custom claims to the token
-        token['email'] = user.email
-        token['username'] = user.username
-
-        return token
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
     
     def validate(self, attrs):
-        data = super().validate(attrs)
+        email = attrs.get('email')
+        password = attrs.get('password')
+        
+        if email and password:
+            try:
+                user = User.objects.get(email=email)
+                if not user.check_password(password):
+                    raise serializers.ValidationError(
+                        'No active account found with the given credentials'
+                    )
+                if not user.is_active:
+                    raise serializers.ValidationError(
+                        'User account is disabled.'
+                    )
+            except User.DoesNotExist:
+                raise serializers.ValidationError(
+                    'No active account found with the given credentials'
+                )
+        else:
+            raise serializers.ValidationError(
+                'Must include "email" and "password".'
+            )
 
-        # Add extra response data
-        data['email'] = self.user.email
-        data['user_id'] = self.user.id
-        data['username'] = self.user.username
-        data['role'] = self.user.role
-        data['user'] = UserSerializer(self.user).data
+        # Générer les tokens JWT
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        
+        # Ajouter des claims personnalisés
+        refresh['email'] = user.email
+        refresh['username'] = user.username
+        
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'email': user.email,
+            'user_id': user.id,
+            'username': user.username,
+            'role': user.role,
+            'user': UserSerializer(user).data
+        }
+
+        # Mettre à jour last_login
+        from django.contrib.auth.models import update_last_login
+        update_last_login(None, user)
 
         return data
 
@@ -29,7 +61,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 
-                  'role', 'is_verified', 'date_joined','last_login']
+                  'role']
         # read_only_fields = ['is_verified', 'date_joined', 'last_login']
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -63,7 +95,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 
                   'role']
         read_only_fields = ['id', 'username', 'email']
-
 
 class AdminSerializer(UserSerializer):
     def create(self, validated_data, *args, **kwargs):

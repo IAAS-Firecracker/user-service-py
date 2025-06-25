@@ -13,7 +13,9 @@ class User(AbstractUser):
         default=UserType.USER
     )
     email = models.EmailField(unique=True)
-    token = models.TextField(blank=True, null=True)    
+    token = models.TextField(blank=True, null=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username'] 
     
     def __str__(self):
         return f"{self.get_user_type_display()}: {self.username}"
