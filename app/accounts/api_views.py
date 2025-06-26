@@ -251,7 +251,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response({"success": True, "message": "Mot de passe réinitialisé avec succès"})
     
-    @action(detail=False, url_path="change-password", methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, url_path="change-password", methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
         old_password = request.data.get('password')
         new_password = request.data.get('new_password')

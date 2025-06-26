@@ -40,6 +40,7 @@ class LoginSerializer(serializers.Serializer):
         # Ajouter des claims personnalisés
         refresh['email'] = user.email
         refresh['username'] = user.username
+        refresh['role'] = user.role
         
         data = {
             'refresh': str(refresh),
