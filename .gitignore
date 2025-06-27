@@ -3,3 +3,6 @@
 */static/*
 */media/*
 app/*/__pycache__
+venv/bin/activate
+*/venv/*
+venv

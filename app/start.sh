@@ -17,7 +17,7 @@ python manage.py collectstatic --noinput
 echo "done ."
 echo "=================running app==================================="
 #daphne -b 0.0.0.0 -p 8000 -t 60000 app.asgi:application &
-python manage.py runserver --http_timeout 60000 0.0.0.0:8081 
+python manage.py runserver 0.0.0.0:8081 
 
 # echo "Django server PID: $!"
 
