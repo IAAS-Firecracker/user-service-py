@@ -42,13 +42,13 @@ CONFIG_SERVER = {
 
 CONF = get_config("user-service",CONFIG_SERVER['config']['uri'])
 print(CONF)
-eureka_conf = {
+# Eureka configuration - will be initialized in apps.py ready() method
+EUREKA_CONF = {
  'server':  CONF.get("propertySources")[0].get('source').get('eureka.client.service-url.defaultZone','http://localhost:8761/eureka'),
  'app_name': 'USER-SERVICE',
  'port': int( CONF.get("propertySources")[0].get('source').get('server.port'))
 }
-print(eureka_conf)
-init_eureka(eureka_conf)
+print("Eureka configuration prepared:", EUREKA_CONF)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
