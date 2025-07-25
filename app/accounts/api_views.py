@@ -98,7 +98,7 @@ class TemplateEmail(Thread):
 
 class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user and request.user.is_superuser
+        return (request.user and request.user.is_superuser) or (request.user and request.user.role == 'ADMIN') 
 
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
@@ -159,7 +159,7 @@ class UserViewSet(viewsets.ModelViewSet):
             # Only administrators or the user themselves can modify
             permission_classes = [permissions.IsAuthenticated]
         elif self.action == 'list':
-            permission_classes = [permissions.IsAdminUser]
+            permission_classes = []
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
@@ -253,16 +253,18 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, url_path="change-password", methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
-        old_password = request.data.get('password')
+        user_id = request.data.get('user_id')
         new_password = request.data.get('new_password')
 
-        if not old_password or not new_password:
+        if not user_id or  not new_password:
             return Response({"error": "Tous les champs sont requis"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = request.user
-        if not user.check_password(old_password):
-            return Response({"error": "Ancien mot de passe incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+           user = User.objects.get(pk=int(user_id))
+        except User.DoesNotExist:
+            return Response({"error": "User Doesnot Exist !!!"}, status=status.HTTP_400_BAD_REQUEST)
 
+    
         user.set_password(new_password)
         user.save()
 

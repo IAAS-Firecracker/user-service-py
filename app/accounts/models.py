@@ -18,7 +18,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username'] 
     
     def __str__(self):
-        return f"{self.get_user_type_display()}: {self.username}"
+        return f" {self.username}"
 
 class PasswordResetCode(models.Model):
     email = models.EmailField()

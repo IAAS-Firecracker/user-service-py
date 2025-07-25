@@ -62,7 +62,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 
-                  'role']
+                  'role','is_active', 'date_joined']
         # read_only_fields = ['is_verified', 'date_joined', 'last_login']
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -88,6 +88,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name', ''),
             role=validated_data.get('role', 'USER')
         )
+
+        if user.role == 'ADMIN':
+            user.is_superuser = True
+            user.save()
+            
         return user
 
 class UserProfileSerializer(serializers.ModelSerializer):

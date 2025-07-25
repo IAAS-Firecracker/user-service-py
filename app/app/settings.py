@@ -20,13 +20,13 @@ import dotenv
 
 dotenv.load_dotenv()
 
-DB_PORT= os.getenv('DB_PORT',5433)
-DB_HOST = os.getenv('DB_HOST','localhost')
+DB_PORT= 5432
+DB_HOST = 'postgres'
 REDIS_HOST = os.getenv('REDIS_HOST','redis')
 REDIS_PORT = os.getenv('REDIS_PORT',6379)
-DB_NAME = os.getenv('DB_NAME','user_service_db')
-DB_USER = os.getenv('DB_USER','firecracker')
-DB_PASSWORD = os.getenv('DB_PASSWORD','fireCracker')
+DB_NAME = 'firecracker'
+DB_USER ='firecracker'
+DB_PASSWORD ='fireCracker'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -36,16 +36,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 CONFIG_SERVER = {
     'config': {
-        'uri' : 'http://localhost:8080',
+        'uri' : 'http://service-config:8080',
     }
 }
 
 CONF = get_config("user-service",CONFIG_SERVER['config']['uri'])
 print(CONF)
 eureka_conf = {
- 'server':  CONF.get("propertySources")[0].get('source').get('eureka.client.service-url.defaultZone','http://localhost:8761/eureka'),
+ #'server':  CONF.get("propertySources")[0].get('source').get('eureka.client.service-url.defaultZone','http://192.168.1.185:8761/eureka'),
+ 'server': 'http://service-registry:8761/eureka',
  'app_name': 'USER-SERVICE',
- 'port': int( CONF.get("propertySources")[0].get('source').get('server.port'))
+ 'port': 8081
 }
 print(eureka_conf)
 init_eureka(eureka_conf)
@@ -53,12 +54,12 @@ init_eureka(eureka_conf)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-RABBITMQ = {
-    'host':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.host','localhost'),
-    'port':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.port','5672'),
-    'username':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.username','guest'),
-    'password':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.password','guest')
-}
+# RABBITMQ = {
+#     'host':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.host','localhost'),
+#     'port':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.port','5672'),
+#     'username':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.username','guest'),
+#     'password':  CONF.get("propertySources")[0].get('source').get('spring.rabbitmq.password','guest')
+# }
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
