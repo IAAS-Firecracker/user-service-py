@@ -253,6 +253,24 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, url_path="change-password", methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
+        old_password = request.data.get('password')
+        new_password = request.data.get('new_password')
+
+        if not old_password or not new_password:
+            return Response({"error": "Tous les champs sont requis"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+        if not user.check_password(old_password):
+            return Response({"error": "Ancien mot de passe incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"success": True, "message": "Mot de passe changé avec succès"})
+    
+
+    @action(detail=False, url_path="update-password", methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def update_password(self, request):
         user_id = request.data.get('user_id')
         new_password = request.data.get('new_password')
 
@@ -269,6 +287,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
 
         return Response({"success": True, "message": "Mot de passe changé avec succès"})
+
 
 class AdminViewSet(viewsets.ModelViewSet):
     model = User
