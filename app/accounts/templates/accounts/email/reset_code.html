@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Réinitialisation de votre mot de passe</title>
+</head>
+<body>
+    <h1>Réinitialisation de votre mot de passe</h1>
+    <p>Bonjour {{ user.username }},</p>
+    <p>Vous avez demandé à réinitialiser votre mot de passe. Voici votre code de réinitialisation :</p>
+    <h2 style="color: #2c3e50;">{{ code }}</h2>
+    <p>Ce code expirera le <strong>{{ expires_at }}</strong>.</p>
+    <p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.</p>
+    <p>Merci,</p>
+    <p>L'équipe IAAS-Firecracker</p>
+</body>
+</html>

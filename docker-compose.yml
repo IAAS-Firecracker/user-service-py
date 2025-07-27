@@ -1,0 +1,32 @@
+services:
+  user-service:
+      restart: "on-failure"
+      build:
+        context: .
+      ports:
+          - 8081:8081
+      volumes:
+          - ./app:/app
+      command: >
+          sh -c "python manage.py runserver 0.0.0.0:8081"
+      env_file:
+          - ./.env
+      healthcheck:
+        test: ["CMD", "python", "manage.py", "check_db_connection"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+      networks:
+        - iaas-firecracker-network
+
+networks:
+  iaas-firecracker-network:
+    external: true
+    name: service-config_iaas-firecracker-network  # Replace with actual network name
+
+  
+
+volumes:
+  .:
+  user-service:
+  
